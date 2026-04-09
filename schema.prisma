@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String?
+  email         String?  @unique
+  image         String?
+  role          Role     @default(READER)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  series        Series[]
+  episodes      Episode[]
+  stats         UserStats?
+}
+
+model Series {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  genre         String
+  tags          String[]
+  coverImage    String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      String
+
+  episodes      Episode[]
+  reads         Int       @default(0)
+  followers     Int       @default(0)
+}
+
+model Episode {
+  id            String    @id @default(cuid())
+  title         String
+  episodeNumber Int
+  body          String
+  teaser        String?
+  readTime      Int
+  readerCount   Int       @default(0)
+  locked        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  series        Series    @relation(fields: [seriesId], references: [id])
+  seriesId      String
+
+  author        User      @relation(fields: [authorId], references: [id])
+  authorId      String
+}
+
+model UserStats {
+  id            String   @id @default(cuid())
+  totalReads    Int      @default(0)
+  totalEpisodes Int      @default(0)
+  totalSeries   Int      @default(0)
+
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String   @unique
+}
+
+model Settings {
+  id            String   @id @default(cuid())
+  siteName      String   @default("Dramatized Fiction")
+  enableAds     Boolean  @default(false)
+  enablePayments Boolean @default(false)
+  updatedAt     DateTime @updatedAt
+}
+
+enum Role {
+  READER
+  AUTHOR
+  ADMIN
+  CEO
+}
